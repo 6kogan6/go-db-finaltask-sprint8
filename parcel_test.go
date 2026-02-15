@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	_ "modernc.org/sqlite"
@@ -52,11 +53,8 @@ func TestAddGetDelete(t *testing.T) {
 	stored, err := store.Get(id)
 	require.NoError(t, err)
 
-	require.Equal(t, id, stored.Number)
-	require.Equal(t, parcel.Client, stored.Client)
-	require.Equal(t, parcel.Status, stored.Status)
-	require.Equal(t, parcel.Address, stored.Address)
-	require.Equal(t, parcel.CreatedAt, stored.CreatedAt)
+	parcel.Number = id
+	assert.Equal(t, parcel, stored)
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
@@ -94,7 +92,7 @@ func TestSetAddress(t *testing.T) {
 	// получите добавленную посылку и убедитесь, что адрес обновился
 	stored, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, newAddress, stored.Address)
+	assert.Equal(t, newAddress, stored.Address)
 
 	// подчистим за собой (статус registered => удаление разрешено)
 	err = store.Delete(id)
@@ -126,7 +124,7 @@ func TestSetStatus(t *testing.T) {
 	// получите добавленную посылку и убедитесь, что статус обновился
 	stored, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, ParcelStatusSent, stored.Status)
+	assert.Equal(t, ParcelStatusSent, stored.Status)
 
 	// тут удалить уже нельзя (sent), оставим запись как есть
 }
@@ -171,21 +169,17 @@ func TestGetByClient(t *testing.T) {
 	// убедитесь в отсутствии ошибки
 	require.NoError(t, err)
 	// убедитесь, что количество полученных посылок совпадает с количеством добавленных
-	require.Len(t, storedParcels, len(parcels))
+	assert.Len(t, storedParcels, len(parcels))
 
 	// check
 	for _, parcel := range storedParcels {
 		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
 		expected, ok := parcelMap[parcel.Number]
-		require.True(t, ok)
+		assert.True(t, ok)
 
 		// убедитесь, что значения полей полученных посылок заполнены верно
-		require.Equal(t, expected.Number, parcel.Number)
-		require.Equal(t, expected.Client, parcel.Client)
-		require.Equal(t, expected.Status, parcel.Status)
-		require.Equal(t, expected.Address, parcel.Address)
-		require.Equal(t, expected.CreatedAt, parcel.CreatedAt)
+		assert.Equal(t, expected, parcel)
 	}
 
 	for id := range parcelMap {

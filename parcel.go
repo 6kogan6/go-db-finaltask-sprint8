@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"errors"
 )
 
 type ParcelStore struct {
@@ -116,22 +115,9 @@ func (s ParcelStore) SetAddress(number int, address string) error {
 	}
 
 	// RowsAffected() покажет, было ли обновление.
-	// Если n == 0, значит:
-	// 1) либо посылки с таким number нет,
-	// 2) либо посылка есть, но она не в статусе registered (тогда менять адрес нельзя).
-	n, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	if err != nil {
 		return err
-	}
-	if n == 0 {
-		// Проверяем, существует ли вообще посылка.
-		// getErr — это ошибка из Get(number): если записи нет, вернётся sql.ErrNoRows.
-		_, getErr := s.Get(number)
-		if getErr != nil {
-			return getErr
-		}
-		// Если запись существует, но обновление не прошло — значит статус не registered.
-		return errors.New("cannot change address: parcel is not registered")
 	}
 
 	return nil
@@ -149,22 +135,9 @@ func (s ParcelStore) Delete(number int) error {
 	}
 
 	// RowsAffected() покажет, было ли удаление.
-	// Если n == 0, значит:
-	// 1) либо посылки с таким number нет,
-	// 2) либо посылка есть, но она не в статусе registered (тогда удалять нельзя).
-	n, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	if err != nil {
 		return err
-	}
-	if n == 0 {
-		// Проверяем, существует ли вообще посылка.
-		// getErr — это ошибка из Get(number): если записи нет, вернётся sql.ErrNoRows.
-		_, getErr := s.Get(number)
-		if getErr != nil {
-			return getErr
-		}
-		// Если запись существует, но удаление не прошло — значит статус не registered.
-		return errors.New("cannot delete: parcel is not registered")
 	}
 
 	return nil
